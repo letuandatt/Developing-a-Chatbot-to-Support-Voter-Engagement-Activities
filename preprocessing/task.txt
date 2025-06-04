@@ -1,0 +1,17 @@
+# QUy trình xử lý
+Thu thập dữ liệu
+Đọc pdf / OCR ảnh
+Đọc thông tin từ PDF / ảnh đã OCR (Trích xuất các thông tin quan trọng)
+(*)Chia đoạn văn bản (Chunking)
+Xử lý NLP (Tách từ, POS tagging, ....)
+
+
+
+# Task đang làm
+Chunking nội dung
+Tương tự các bước trên đối với những loại văn bản khác.
+
+
+# Viết vào Word
+Vừa code viết
+Thêm nghiên cứu liên quan. (Các thư viện và các nghiên cứu liên quan)
