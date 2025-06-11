@@ -1,4 +1,4 @@
 data
 tutorial
-*.txt
-*.json
+.txt
+.json
