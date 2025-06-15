@@ -1,0 +1,16 @@
+requests~=2.32.3
+selenium~=4.32.0
+webdriver-manager~=4.0.2
+beautifulsoup4~=4.13.4
+torch~=2.7.0
+transformers~=4.48.3
+langchain~=0.3.25
+langchain-community~=0.2.17
+langchain-experimental~=0.3.4
+langchain-text-splitters~=0.3.8
+langchain-core~=0.3.65
+opencv-python~=4.11.0.86
+numpy~=1.26.4
+matplotlib~=3.10.3
+pillow~=10.2.0
+vietocr~=0.3.13
