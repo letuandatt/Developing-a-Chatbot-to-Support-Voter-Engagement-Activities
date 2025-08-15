@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>LegalAI Chatbot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #2c3e50;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 320px;
+            padding: 28px 24px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            overflow-y: auto;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sidebar h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 24px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        button {
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: linear-gradient(135deg, #e0e0e0, #bdbdbd);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            box-shadow: 0 4px 16px rgba(255, 107, 107, 0.3);
+        }
+
+        .delete-btn:hover {
+            box-shadow: 0 8px 24px rgba(255, 107, 107, 0.4);
+        }
+
+        #chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+        }
+
+        #history {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scroll-behavior: smooth;
+        }
+
+        #history::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #history::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        #history::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        #history::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .message {
+            padding: 16px 20px;
+            border-radius: 16px;
+            max-width: 75%;
+            line-height: 1.6;
+            word-wrap: break-word;
+            position: relative;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            align-self: flex-end;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .assistant {
+            background: rgba(255, 255, 255, 0.95);
+            color: #2c3e50;
+            align-self: flex-start;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .assistant strong {
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .assistant ul, .assistant ol {
+            margin: 12px 0;
+            padding-left: 24px;
+        }
+
+        .assistant a {
+            color: #667eea;
+            text-decoration: none;
+            border-bottom: 1px solid #667eea;
+            transition: all 0.2s ease;
+        }
+
+        .assistant a:hover {
+            color: #764ba2;
+            border-bottom-color: #764ba2;
+        }
+
+        #input-form {
+            padding: 24px 32px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: flex-end;
+            gap: 16px;
+            box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        #query {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 16px;
+            font-size: 16px;
+            resize: none;
+            min-height: 56px;
+            max-height: 160px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+
+        #query:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        #query::placeholder {
+            color: #8e8e93;
+        }
+
+        .send-btn {
+            min-width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-size: 18px;
+        }
+
+        .typing {
+            display: none;
+            align-self: flex-start;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            max-width: 75%;
+            color: #8e8e93;
+            backdrop-filter: blur(10px);
+        }
+
+        .typing::after {
+            content: '⋯';
+            animation: typing 1.5s infinite;
+            font-size: 20px;
+        }
+
+        @keyframes typing {
+            0%, 60% { opacity: 0.3; }
+            30% { opacity: 1; }
+        }
+
+        #conv-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        #conv-list li {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        #conv-list li:hover {
+            background: rgba(255, 255, 255, 0.8);
+            transform: translateX(4px);
+        }
+
+        #conv-list li.active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+            border-color: rgba(102, 126, 234, 0.4);
+            font-weight: 600;
+        }
+
+        .conv-name {
+            flex: 1;
+            margin-right: 8px;
+            font-weight: 500;
+        }
+
+        #conv-list button {
+            padding: 6px 12px;
+            font-size: 12px;
+            margin-left: 4px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .rename-input {
+            display: none;
+            flex: 1;
+            margin-right: 8px;
+            padding: 8px 12px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+
+        .rename-input.visible {
+            display: block;
+        }
+
+        .rename-btn {
+            background: linear-gradient(135deg, #ffd93d, #ff9500);
+            color: #2c3e50;
+            box-shadow: 0 4px 16px rgba(255, 217, 61, 0.3);
+        }
+
+        .rename-btn:hover {
+            box-shadow: 0 8px 24px rgba(255, 217, 61, 0.4);
+        }
+
+        .intro-message {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #2c3e50;
+            font-size: 18px;
+            padding: 48px 32px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            margin: auto;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .intro-message h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .intro-message p {
+            line-height: 1.6;
+            color: #6c757d;
+            margin-bottom: 24px;
+        }
+
+        .intro-features {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .feature {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            min-width: 120px;
+        }
+
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .feature-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .raw-md {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            #sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+            }
+
+            .intro-features {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .feature {
+                flex-direction: row;
+                min-width: auto;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="sidebar">
+        <h2>Quản lý Phiên</h2>
+        <div class="button-group">
+            <button onclick="newConv()">+ Tạo phiên mới</button>
+            <button onclick="clearCurrent()" class="delete-btn">🗑️ Xóa lịch sử hiện tại</button>
+        </div>
+        <div id="conv-list">
+            <ul>
+                {% for conv_id, conv in sorted_convs %}
+                    <li {% if conv_id == current_conv %}class="active"{% endif %}>
+                        <span class="conv-name" onclick="switchConv('{{ conv_id }}')">{{ conv.name }}</span>
+                        <input type="text" class="rename-input" id="rename-{{ conv_id }}" value="{{ conv.name }}" onkeypress="if(event.keyCode==13) renameConv('{{ conv_id }}');">
+                        <button class="rename-btn" onclick="showRenameInput('{{ conv_id }}')">✏️</button>
+                        <button onclick="deleteConv('{{ conv_id }}'); event.stopPropagation();" class="delete-btn">✕</button>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div id="chat">
+        <div id="history">
+            {% if no_conversations %}
+                <div class="intro-message">
+                    <h1>LegalAI Chatbot</h1>
+                    <p>Chào mừng đến với trợ lý AI chuyên nghiệp về pháp luật Việt Nam! Tôi sẽ giúp bạn tìm hiểu và giải đáp các thắc mắc về văn bản quy phạm pháp luật một cách chính xác và chi tiết.</p>
+                    <div class="intro-features">
+                        <div class="feature">
+                            <div class="feature-icon">📚</div>
+                            <div class="feature-text">Tra cứu pháp luật</div>
+                        </div>
+                        <div class="feature">
+                            <div class="feature-icon">⚖️</div>
+                            <div class="feature-text">Tư vấn chuyên sâu</div>
+                        </div>
+                        <div class="feature">
+                            <div class="feature-icon">🎯</div>
+                            <div class="feature-text">Kết quả chính xác</div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                {% for msg in messages %}
+                    {% if msg.role == 'assistant' %}
+                        <div class="message assistant">
+                            <span class="raw-md">{{ msg.content }}</span>
+                            <div class="md-render"></div>
+                        </div>
+                    {% else %}
+                        <div class="message user">{{ msg.content }}</div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            <div id="typing-indicator" class="typing"></div>
+        </div>
+        <form id="input-form" onsubmit="sendQuery(); return false;">
+            <textarea id="query" placeholder="Nhập câu hỏi về pháp luật của bạn..." autofocus {% if no_conversations %}disabled{% endif %}></textarea>
+            <button type="submit" class="send-btn" {% if no_conversations %}disabled{% endif %}>🚀</button>
+        </form>
+    </div>
+
+    <!-- marked.js cho Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        marked.setOptions({
+            gfm: true,
+            breaks: true,
+            sanitizer: true
+        });
+
+        // Function để re-render tất cả assistant messages thành Markdown
+        function renderAllMarkdown() {
+            const assistantMsgs = document.querySelectorAll('.assistant');
+            assistantMsgs.forEach(msg => {
+                const raw = msg.querySelector('.raw-md');
+                const render = msg.querySelector('.md-render');
+                if (raw && render) {
+                    render.innerHTML = marked.parse(raw.textContent);
+                }
+            });
+        }
+
+        // Chạy render sau khi page load và sau mỗi thay đổi
+        window.addEventListener('load', renderAllMarkdown);
+
+        function sendQuery() {
+            const queryInput = document.getElementById('query');
+            const query = queryInput.value.trim();
+            if (!query) return;
+
+            const history = document.getElementById('history');
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message user';
+            userMsg.textContent = query;
+            history.insertBefore(userMsg, document.getElementById('typing-indicator'));
+            history.scrollTop = history.scrollHeight;
+
+            const typing = document.getElementById('typing-indicator');
+            typing.style.display = 'block';
+            history.scrollTop = history.scrollHeight;
+
+            fetch('/query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: query })
+            })
+            .then(response => response.json())
+            .then(data => {
+                typing.style.display = 'none';
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                const assistantMsg = document.createElement('div');
+                assistantMsg.className = 'message assistant';
+                assistantMsg.innerHTML = '<span class="raw-md" style="display:none">' + data.response + '</span><div class="md-render"></div>';
+                history.insertBefore(assistantMsg, typing);
+                renderAllMarkdown();
+                history.scrollTop = history.scrollHeight;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                typing.style.display = 'none';
+            });
+
+            queryInput.value = '';
+            queryInput.style.height = 'auto';
+        }
+
+        function newConv() {
+            fetch('/new_conv', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        }
+
+        function switchConv(id) {
+            fetch(`/switch_conv/${id}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const history = document.getElementById('history');
+                    history.innerHTML = '<div id="typing-indicator" class="typing"></div>';
+                    data.messages.forEach(msg => {
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = `message ${msg.role}`;
+                        if (msg.role === 'assistant') {
+                            msgDiv.innerHTML = '<span class="raw-md" style="display:none">' + msg.content + '</span><div class="md-render"></div>';
+                        } else {
+                            msgDiv.textContent = msg.content;
+                        }
+                        history.insertBefore(msgDiv, document.getElementById('typing-indicator'));
+                    });
+                    renderAllMarkdown();
+                    history.scrollTop = history.scrollHeight;
+                    location.reload();
+                }
+            });
+        }
+
+        function deleteConv(id) {
+            if (confirm('Xóa phiên này?')) {
+                fetch(`/delete_conv/${id}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    }
+                });
+            }
+        }
+
+        function clearCurrent() {
+            if (confirm('Xóa toàn bộ lịch sử và phiên?')) {
+                fetch('/clear_current', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('history').innerHTML = '<div id="typing-indicator" class="typing"></div>';
+                        renderAllMarkdown();
+                        location.reload();
+                    } else {
+                        alert(data.error);
+                    }
+                });
+            }
+        }
+
+        function showRenameInput(id) {
+            const input = document.getElementById(`rename-${id}`);
+            input.classList.add('visible');
+            input.focus();
+            const nameSpan = input.previousElementSibling;
+            nameSpan.style.display = 'none';
+        }
+
+        function renameConv(id) {
+            const input = document.getElementById(`rename-${id}`);
+            const newName = input.value.trim();
+            if (newName) {
+                fetch(`/rename_conv/${id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ new_name: newName })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.error);
+                    }
+                });
+            } else {
+                input.classList.remove('visible');
+                input.previousElementSibling.style.display = 'block';
+            }
+        }
+
+        const queryInput = document.getElementById('query');
+        queryInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+        queryInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();      // không tạo dòng mới
+                sendQuery();             // gọi hàm gửi
+            }
+        });
+    </script>
+</body>
+</html>
