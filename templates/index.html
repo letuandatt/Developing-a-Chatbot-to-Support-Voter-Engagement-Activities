@@ -409,6 +409,12 @@
             display: none;
         }
 
+        .message-metadata {
+            margin-top: 8px;
+            opacity: 0.75;
+            font-size: 0.9em;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             body {
@@ -465,10 +471,10 @@
                             <div class="feature-icon">📚</div>
                             <div class="feature-text">Tra cứu pháp luật</div>
                         </div>
-                        <div class="feature">
-                            <div class="feature-icon">⚖️</div>
-                            <div class="feature-text">Tư vấn chuyên sâu</div>
-                        </div>
+<!--                        <div class="feature">-->
+<!--                            <div class="feature-icon">⚖️</div>-->
+<!--                            <div class="feature-text">Tư vấn chuyên sâu</div>-->
+<!--                        </div>-->
                         <div class="feature">
                             <div class="feature-icon">🎯</div>
                             <div class="feature-text">Kết quả chính xác</div>
@@ -481,6 +487,14 @@
                         <div class="message assistant">
                             <span class="raw-md">{{ msg.content }}</span>
                             <div class="md-render"></div>
+                            {% if msg.model %}
+                                <div class="message-metadata">
+                                    <small>
+                                        🤖 Model: <strong>{{ msg.model }}</strong>
+                                        {% if msg.elapsed_time %}| ⏱️ Thời gian: <strong>{{ msg.elapsed_time }}s</strong>{% endif %}
+                                    </small>
+                                </div>
+                            {% endif %}
                         </div>
                     {% else %}
                         <div class="message user">{{ msg.content }}</div>
@@ -489,8 +503,9 @@
             {% endif %}
             <div id="typing-indicator" class="typing"></div>
         </div>
+
         <form id="input-form" onsubmit="sendQuery(); return false;">
-            <textarea id="query" placeholder="Nhập câu hỏi về pháp luật của bạn..." autofocus {% if no_conversations %}disabled{% endif %}></textarea>
+            <textarea id="query" placeholder="Nhập câu hỏi của bạn..." autofocus {% if no_conversations %}disabled{% endif %}></textarea>
             <button type="submit" class="send-btn" {% if no_conversations %}disabled{% endif %}>🚀</button>
         </form>
     </div>
@@ -549,7 +564,12 @@
                 }
                 const assistantMsg = document.createElement('div');
                 assistantMsg.className = 'message assistant';
-                assistantMsg.innerHTML = '<span class="raw-md" style="display:none">' + data.response + '</span><div class="md-render"></div>';
+                assistantMsg.innerHTML =
+            '<span class="raw-md" style="display:none">' + data.response + '</span>' +
+            '<div class="md-render"></div>' +
+            `<div class="message-metadata">
+                <small>🤖 Model: <strong>${data.model}</strong> | ⏱️ Thời gian: <strong>${data.elapsed_time}s</strong></small>
+            </div>`;
                 history.insertBefore(assistantMsg, typing);
                 renderAllMarkdown();
                 history.scrollTop = history.scrollHeight;
